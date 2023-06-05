@@ -15,6 +15,13 @@ def distance(a, b):
     return abs(a - b)
 
 
+def is_touching(landmark_a, landmark_b, threshold):
+    if distance(landmark_a, landmark_b) <= threshold:
+        return True
+    else:
+        return False
+
+
 class Point3D(object):
     def __init__(self, x=0, y=0, z=0):
         self.x = x
@@ -30,6 +37,8 @@ def mirror(landmark):
 
 
 state = "unknown"
+state_distance = 0
+vlc_running = False
 start_time = time.time()
 
 
@@ -47,24 +56,69 @@ def position(p):
         print(time.time(), " : known -> hold")
 
 
+def position_volume(p, d):
+    global state
+    global state_distance
+    global start_time
+
+    if state == "unknown":
+        start_time = time.time()
+        state = p
+        state_distance = d
+        print("unknown -> ", p)
+    elif state == p and (time.time() - start_time) > 0.3:
+        if d - state_distance > 0.10 * state_distance:
+            action("volume_up")
+            state_distance = d
+        elif state_distance - d > 0.10 * state_distance:
+            action("volume_down")
+            state_distance = d
+
+
+def send_to_vlc(*key):
+    window_title = "debussy_arabesque_num_1.mp4 - Lecteur multimédia VLC"
+
+    # searches for all windows VLC open (to fix the 'stop' issue)
+    titles = pyautogui.getAllTitles()
+    for t in titles:
+        if 'Lecteur multimédia VLC' in t:
+             window_title = t
+
+    windows = pyautogui.getWindowsWithTitle(window_title)
+
+    if windows:
+        window = windows[0]
+        window.activate()
+        pyautogui.hotkey(*key)
+
+
 def action(p):
+    global vlc_running
+
     if p == "thumb_up":
-        pyautogui.hotkey('space')
+        if not vlc_running:
+            launch_vlc()
+        send_to_vlc('space')
     elif p == "open_hand":
-        pyautogui.hotkey('s')
+        send_to_vlc('s')
     elif p == "zero_hand":
-        pyautogui.hotkey('m')
+        send_to_vlc('m')
     elif p == "victory_hand":
-        pyautogui.hotkey('right')
+        send_to_vlc('right')
     elif p == "fist_hand":
-        pyautogui.hotkey('ctrl', 'q')
+        send_to_vlc('ctrl', 'q')
+        vlc_running = False
     elif p == "fists_hands":
-        pyautogui.hotkey('ctrl', 'q')
+        send_to_vlc('ctrl', 'q')
         exit(0)
     elif p == "victories_hands":
-        pyautogui.hotkey('left')
+        send_to_vlc('left')
     elif p == "square_hands":
-        pyautogui.hotkey('f')
+        send_to_vlc('f')
+    elif p == "volume_up":
+        send_to_vlc('ctrl', 'up')
+    elif p == "volume_down":
+        send_to_vlc('ctrl', 'down')
 
 
 def thumb_up(handLandmarks):
@@ -86,8 +140,9 @@ def open_hand(handLandmarks):
 
 
 def zero_hand(handLandmarks):
-    return distance(handLandmarks[4].x, handLandmarks[8].x) < 0.2 \
-        and distance(handLandmarks[4].y, handLandmarks[8].y) < 0.2 \
+    t = distance(handLandmarks[0].y, handLandmarks[5].y) / 5
+    return is_touching(handLandmarks[4].x, handLandmarks[8].x, t) \
+        and is_touching(handLandmarks[4].y, handLandmarks[8].y, t) \
         and handLandmarks[7].y < handLandmarks[8].y \
         and handLandmarks[12].y < handLandmarks[10].y \
         and handLandmarks[16].y < handLandmarks[14].y \
@@ -105,8 +160,9 @@ def victory_hand(handLandmarks):
 
 
 def fist_hand(handLandmarks):
-    return distance(handLandmarks[4].x, handLandmarks[10].x) < 0.03 \
-        and distance(handLandmarks[4].y, handLandmarks[10].y) < 0.03 \
+    t = distance(handLandmarks[0].y, handLandmarks[5].y) / 5
+    return is_touching(handLandmarks[4].x, handLandmarks[10].x, t) \
+        and is_touching(handLandmarks[4].y, handLandmarks[10].y, t) \
         and handLandmarks[8].y > handLandmarks[6].y \
         and handLandmarks[12].y > handLandmarks[10].y \
         and handLandmarks[16].y > handLandmarks[14].y \
@@ -115,22 +171,24 @@ def fist_hand(handLandmarks):
 
 
 def square_hands(rightLandmarks, leftLandmarks):
+    t = distance(rightLandmarks[4].y, rightLandmarks[3].y)
     return rightLandmarks[4].y < rightLandmarks[3].y \
-        and rightLandmarks[8].x < rightLandmarks[6].x \
-        and rightLandmarks[12].x > rightLandmarks[10].x \
-        and rightLandmarks[16].x > rightLandmarks[14].x \
-        and rightLandmarks[20].x > rightLandmarks[18].x \
         and rightLandmarks[17].x < rightLandmarks[0].x \
         and leftLandmarks[4].y > leftLandmarks[3].y \
-        and leftLandmarks[8].x > leftLandmarks[6].x \
-        and leftLandmarks[12].x < leftLandmarks[10].x \
-        and leftLandmarks[16].x < leftLandmarks[14].x \
-        and leftLandmarks[20].x < leftLandmarks[18].x \
         and leftLandmarks[17].x > leftLandmarks[0].x \
-        and distance(rightLandmarks[4].y, leftLandmarks[8].y) < 0.03 \
-        and distance(rightLandmarks[4].x, leftLandmarks[8].x) < 0.03 \
-        and distance(leftLandmarks[4].y, rightLandmarks[8].y) < 0.03 \
-        and distance(leftLandmarks[4].x, rightLandmarks[8].x) < 0.03
+        and is_touching(rightLandmarks[4].y, leftLandmarks[8].y, t) \
+        and is_touching(rightLandmarks[4].x, leftLandmarks[8].x, t) \
+        and is_touching(leftLandmarks[4].y, rightLandmarks[8].y, t) \
+        and is_touching(leftLandmarks[4].x, rightLandmarks[8].x, t)
+
+
+def index_hand(handLandmarks):
+    return handLandmarks[4].x > handLandmarks[3].x \
+        and handLandmarks[8].y < handLandmarks[6].y \
+        and handLandmarks[12].y > handLandmarks[10].y \
+        and handLandmarks[16].y > handLandmarks[14].y \
+        and handLandmarks[20].y > handLandmarks[18].y \
+        and handLandmarks[17].x > handLandmarks[0].x
 
 
 def event_loop():
@@ -163,6 +221,9 @@ def event_loop():
                     position("fists_hands")
                 elif victory_hand(right_landmarks.landmark) and victory_hand(mirror(left_landmarks.landmark)):
                     position("victories_hands")
+                elif index_hand(right_landmarks.landmark) and index_hand(mirror(left_landmarks.landmark)):
+                    d = distance(right_landmarks.landmark[8].x, left_landmarks.landmark[8].x)
+                    position_volume("index_hands", d)
                 elif square_hands(right_landmarks.landmark, left_landmarks.landmark):
                     position("square_hands")
                 else:
@@ -175,22 +236,27 @@ def event_loop():
 
             elif len(results.multi_hand_landmarks) == 1:
 
+                # to find the first hand that appears in the frame
                 hand_landmarks = results.multi_hand_landmarks[0]
 
+                # to find out which hand it is
+                hand_label = results.multi_handedness[0].classification[0].label
+
                 # ranked from most to least restrictive
-                if zero_hand(hand_landmarks.landmark):
-                    position("zero_hand")
-                elif thumb_up(hand_landmarks.landmark):
-                    position("thumb_up")
-                elif fist_hand(hand_landmarks.landmark):
-                    position("fist_hand")
-                elif victory_hand(hand_landmarks.landmark):
-                    position("victory_hand")
-                elif open_hand(hand_landmarks.landmark):
-                    position("open_hand")
-                else:
-                    state = "unknown"
-                    print(" -> unknown")
+                if hand_label == 'Right':
+                    if zero_hand(hand_landmarks.landmark):
+                        position("zero_hand")
+                    elif thumb_up(hand_landmarks.landmark):
+                        position("thumb_up")
+                    elif fist_hand(hand_landmarks.landmark):
+                        position("fist_hand")
+                    elif victory_hand(hand_landmarks.landmark):
+                        position("victory_hand")
+                    elif open_hand(hand_landmarks.landmark):
+                        position("open_hand")
+                    else:
+                        state = "unknown"
+                        print(" -> unknown")
 
                 # Draw hand landmarks
                 mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS)
@@ -209,7 +275,7 @@ def event_loop():
         # print(fps)
 
         # Display image
-        cv2.imshow('MediaPipe Hands', image)
+        cv2.imshow('AirKey - Camera', image)
 
         # Echap
         if cv2.waitKey(1) == 27:
@@ -227,13 +293,23 @@ height = int(help_image.shape[0] * scale_percent / 100)
 dim = (width, height)
 resized = cv2.resize(help_image, dim, interpolation=cv2.INTER_AREA)
 
-cv2.imshow("Help", resized)
+cv2.imshow("AirKey - Help", resized)
 
-# Using the subprocess module to open VLC
-vlc_path = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
-media_file = r'C:\Users\Albane\Pictures\Perso\debussy_arabesque_num_1.mp4'
-subprocess.Popen([vlc_path, media_file])
 
-event_loop()
-cap.release()
-cv2.destroyAllWindows()
+def launch_vlc():
+    global vlc_running
+    # Using the subprocess module to open VLC
+    vlc_path = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
+    media_file = r'C:\Users\Albane\Pictures\Perso\debussy_arabesque_num_1.mp4'
+    subprocess.Popen([vlc_path, media_file])
+    vlc_running = True
+
+
+def main():
+    launch_vlc()
+    event_loop()
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+main()
