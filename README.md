@@ -13,47 +13,13 @@ This project utilizes hand recognition and gesture control to interact with a me
 ## Installation
 
 1. Clone the repository or download the source code files.
-2. Install the required Python packages using pip:
-`pip install opencv-python mediapipe pyautogui`
+2. Install the required Python packages using pip: `pip install opencv-python mediapipe pyautogui`
 3. Install VLC media player from the official website: https://www.videolan.org/vlc/index.html
 
 ## Usage
 
 1. Connect a webcam to your computer.
-2. Run the `main.py` script:
-`Certainly! Here's a README file for the code:
-
-markdown
-
-# AirKey Hand Gesture Control
-
-This project utilizes hand recognition and gesture control to interact with a media player (VLC). By performing specific hand gestures in front of a webcam, you can control various functions of the media player.
-
-## Requirements
-
-- Python 3.x
-- OpenCV
-- Mediapipe
-- PyAutoGUI
-- VLC media player
-
-## Installation
-
-1. Clone the repository or download the source code files.
-2. Install the required Python packages using pip:
-
-pip install opencv-python mediapipe pyautogui
-
-markdown
-
-
-3. Install VLC media player from the official website: https://www.videolan.org/vlc/index.html
-
-## Usage
-
-1. Connect a webcam to your computer.
-2. Run the `main.py` script:
-`python main.py`
+2. Run the `main.py` script: `python main.py`
 3. The webcam feed will open along with a help window showing the supported hand gestures.
 4. Perform the specified hand gestures in front of the webcam to control the media player functions.
 5. The supported hand gestures and their corresponding actions are as follows:
