@@ -144,7 +144,7 @@ def zero_hand(handLandmarks):
     t = distance(handLandmarks[0].y, handLandmarks[5].y) / 5
     return is_touching(handLandmarks[4].x, handLandmarks[8].x, t) \
         and is_touching(handLandmarks[4].y, handLandmarks[8].y, t) \
-        and handLandmarks[7].y < handLandmarks[8].y \
+        and handLandmarks[6].y < handLandmarks[8].y \
         and handLandmarks[12].y < handLandmarks[10].y \
         and handLandmarks[16].y < handLandmarks[14].y \
         and handLandmarks[20].y < handLandmarks[18].y \
