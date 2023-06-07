@@ -50,7 +50,7 @@ This project utilizes the following libraries and tools:
 - VLC media player: https://www.videolan.org/vlc/index.html
 
 ## Contributors
-- 
-- 
-- 
+- https://github.com/AlbanePapillon
+- https://github.com/GDutheil
+- https://github.com/TheoPinardin
 
